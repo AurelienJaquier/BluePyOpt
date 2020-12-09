@@ -22,7 +22,7 @@ Copyright (c) 2016-2020, EPFL/Blue Brain Project
 
 import setuptools
 import versioneer
-
+# test
 setuptools.setup(
     name="bluepyopt",
     version=versioneer.get_version(),
