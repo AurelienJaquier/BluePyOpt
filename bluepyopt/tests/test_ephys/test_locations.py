@@ -289,7 +289,7 @@ def test_serialize():
         NrnSeclistSecLocation(
             'NrnSeclistSecLocation', seclist_name, sec_index),
         NrnSomaDistanceCompLocation(
-            'NrnSomaDistanceCompLocation', soma_distance, seclist_name))
+            'NrnSomaDistanceCompLocation', soma_distance, seclist_name),)
 
     for loc in locations:
         serialized = loc.to_dict()
