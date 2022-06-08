@@ -171,6 +171,7 @@ class TestNrnSeclistSecLocation(object):
         dend_comp = self.loc_dend.instantiate(sim=self.sim, icell=cell)
         assert dend_comp == dend2
 
+
 @pytest.mark.unit
 class TestNrnSomaDistanceCompLocation(object):
 
