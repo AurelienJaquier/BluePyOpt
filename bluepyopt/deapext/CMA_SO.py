@@ -1,7 +1,7 @@
 """Single Objective CMA-es class"""
 
 """
-Copyright (c) 2016-2022, EPFL/Blue Brain Project
+Copyright (c) 2016-2020, EPFL/Blue Brain Project
 
  This file is part of BluePyOpt <https://github.com/BlueBrain/BluePyOpt>
 
@@ -32,6 +32,7 @@ from deap import cma
 from .stoppingCriteria import (
     MaxNGen,
     Stagnation,
+    Stagnationv2,
     TolHistFun,
     EqualFunVals,
     NoEffectAxis,
@@ -63,17 +64,11 @@ class CMA_SO(cma.Strategy):
         """Constructor
 
         Args:
-             centroid (list): initial guess used as the starting point of
-             the CMA-ES
-             offspring_size (int): number of offspring individuals in each
-                 generation
-             sigma (float): initial standard deviation of the distribution
-             max_ngen (int): total number of generation to run
-             IndCreator (fcn): function returning an individual of the pop
-             RandIndCreator (fcn): function creating a random individual.
-             map_function (map): function used to map (parallelize) the
-                 evaluation function calls
-             use_scoop (bool): use scoop map for parallel computation
+            centroid (list): initial guess used as the starting point of
+            the CMA-ES
+            sigma (float): initial standard deviation of the distribution
+            max_ngen (int): total number of generation to run
+            IndCreator (fcn): function returning an individual of the pop
         """
 
         if offspring_size is None:
@@ -109,6 +104,7 @@ class CMA_SO(cma.Strategy):
         self.stopping_conditions = [
             MaxNGen(max_ngen),
             Stagnation(self.lambda_, self.problem_size),
+            # Stagnationv2(self.lambda_, self.problem_size),
             TolHistFun(self.lambda_, self.problem_size),
             EqualFunVals(self.lambda_, self.problem_size),
             NoEffectAxis(self.problem_size),
@@ -202,7 +198,7 @@ class CMA_SO(cma.Strategy):
         for f, ind in zip(fitnesses, self.population):
             ind.fitness.values = f
 
-    def check_termination(self, gen):
+    def check_termination(self, gen, s2=10000, s3=10000, s4=10000, s5=10000, s6=10000, s7=10000, s8=10000):
         stopping_params = {
             "gen": gen,
             "population": self.population,
@@ -220,6 +216,22 @@ class CMA_SO(cma.Strategy):
             if c.criteria_met:
                 logger.info(
                     "CMA stopped because of termination criteria: " +
-                    " ".join(c.name)
+                    "" + " ".join(c.name)
                 )
                 self.active = False
+                if c.name == "Stagnationv2" and gen < s2:
+                    s2 = gen
+                if c.name == "Stagnationv3" and gen < s3:
+                    s3 = gen
+                if c.name == "Stagnationv4" and gen < s4:
+                    s4 = gen
+                if c.name == "Stagnationv5" and gen < s5:
+                    s5 = gen
+                if c.name == "Stagnationv6" and gen < s6:
+                    s6 = gen
+                if c.name == "Stagnationv7" and gen < s7:
+                    s7 = gen
+                if c.name == "Stagnationv8" and gen < s8:
+                    s8 = gen
+
+        return s2, s3, s4, s5, s6, s7, s8

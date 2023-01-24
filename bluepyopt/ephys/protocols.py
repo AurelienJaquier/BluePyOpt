@@ -207,7 +207,7 @@ class SweepProtocol(Protocol):
                         cvode_active=self.cvode_active)
                 else:
                     sim.run(
-                        self.total_duration, cvode_active=self.cvode_active
+                        cell_model, self.total_duration, cvode_active=self.cvode_active
                     )
             except (RuntimeError, simulators.NrnSimulatorException):
                 logger.debug(

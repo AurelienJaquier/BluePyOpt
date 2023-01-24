@@ -30,7 +30,7 @@ import deap
 from deap import base
 from deap import cma
 
-from .stoppingCriteria import MaxNGen
+from .stoppingCriteria import MaxNGen, Stagnation
 from . import utils
 from . import hype
 
@@ -163,7 +163,10 @@ class CMA_MO(cma.StrategyMultiObjective):
                 self.lambda_
             )
 
-        self.stopping_conditions = [MaxNGen(max_ngen)]
+        self.stopping_conditions = [
+            MaxNGen(max_ngen),
+            Stagnation(self.lambda_, self.problem_size),
+        ]
 
     def _select(self, candidates):
         """Select the best candidates of the population
@@ -231,7 +234,7 @@ class CMA_MO(cma.StrategyMultiObjective):
         for f, ind in zip(fitnesses, self.parents):
             ind.fitness.values = f
 
-    def check_termination(self, gen):
+    def check_termination(self, gen, s2=10000, s3=10000, s4=10000, s5=10000, s6=10000, s7=10000, s8=10000):
         stopping_params = {
             "gen": gen,
             "population": self.population,
@@ -242,6 +245,22 @@ class CMA_MO(cma.StrategyMultiObjective):
             if c.criteria_met:
                 logger.info(
                     "CMA stopped because of termination criteria: " +
-                    " ".join(c.name)
+                    "" + " ".join(c.name)
                 )
                 self.active = False
+                if c.name == "Stagnationv2" and gen < s2:
+                    s2 = gen
+                if c.name == "Stagnationv3" and gen < s3:
+                    s3 = gen
+                if c.name == "Stagnationv4" and gen < s4:
+                    s4 = gen
+                if c.name == "Stagnationv5" and gen < s5:
+                    s5 = gen
+                if c.name == "Stagnationv6" and gen < s6:
+                    s6 = gen
+                if c.name == "Stagnationv7" and gen < s7:
+                    s7 = gen
+                if c.name == "Stagnationv8" and gen < s8:
+                    s8 = gen
+
+        return s2, s3, s4, s5, s6, s7, s8
