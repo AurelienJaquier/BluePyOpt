@@ -198,7 +198,7 @@ class CMA_SO(cma.Strategy):
         for f, ind in zip(fitnesses, self.population):
             ind.fitness.values = f
 
-    def check_termination(self, gen, s2=10000, s3=10000, s4=10000, s5=10000, s6=10000, s7=10000, s8=10000):
+    def check_termination(self, gen, s2=10000, s3=10000, s4=10000, s5=10000, s6=10000, s7=10000, s8=10000, s9=10000, s10=10000):
         stopping_params = {
             "gen": gen,
             "population": self.population,
@@ -233,5 +233,9 @@ class CMA_SO(cma.Strategy):
                     s7 = gen
                 if c.name == "Stagnationv8" and gen < s8:
                     s8 = gen
+                if c.name == "Stagnationv9" and gen < s9:
+                    s9 = gen
+                if c.name == "Stagnationv10" and gen < s10:
+                    s10 = gen
 
-        return s2, s3, s4, s5, s6, s7, s8
+        return s2, s3, s4, s5, s6, s7, s8, s9, s10
