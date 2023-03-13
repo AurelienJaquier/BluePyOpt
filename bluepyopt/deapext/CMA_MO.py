@@ -160,12 +160,12 @@ class CMA_MO(cma.StrategyMultiObjective):
         self.active = True
         if max_ngen <= 0:
             max_ngen = 100 + 50 * (self.problem_size + 3) ** 2 / numpy.sqrt(
-                self.lambda_
+                lambda_
             )
 
         self.stopping_conditions = [
             MaxNGen(max_ngen),
-            Stagnation(self.lambda_, self.problem_size),
+            Stagnation(lambda_, self.problem_size),
         ]
 
     def _select(self, candidates):

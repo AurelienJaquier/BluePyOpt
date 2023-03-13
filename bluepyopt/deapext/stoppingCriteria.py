@@ -93,9 +93,7 @@ class Stagnation(bluepyopt.stoppingCriteria.StoppingCriteria):
             self.median[-self.stagnation_iter:-self.stagnation_iter + 20]
         )
         if cbest and cmed and cbest2 and cmed2:
-            # self.criteria_met = True
-            with open("stopcrit.txt", "a") as f:
-                f.write(f"Stagnation at gen {ngen}.\n")
+            self.criteria_met = True
 
 
 class Stagnationv2(bluepyopt.stoppingCriteria.StoppingCriteria):
@@ -103,270 +101,23 @@ class Stagnationv2(bluepyopt.stoppingCriteria.StoppingCriteria):
 
     name = "Stagnationv2"
 
-    def __init__(self, lambda_, problem_size):
-        """Constructor"""
+    def __init__(self, lambda_, problem_size, threshold=0.01, std_threshold=0.02):
+        """Constructor
+        
+        Args:
+            lambda_ (int): offspring size
+            problem_size (int): problem size
+            threshold (float): 1st criterion is triggered if best fitness
+                improves less than this threshold for 100 generations
+            std_threshold (float): 2nd criterion is triggered if
+                standard deviation of the best fitness over
+                the last 20 generations is below the best fitness multiplied
+                by this threshold
+        """
         super(Stagnationv2, self).__init__()
 
         self.lambda_ = lambda_
         self.problem_size = problem_size
-        self.stagnation_iter = None
-
-        self.best = []
-        self.median = []
-
-        # for plotting
-        self.gens = []
-        self.med_now = []
-        self.med_bf = []
-        self.best_now = []
-        self.best_bf = []
-
-    # def check(self, kwargs):
-    #     """Check if the population stopped improving"""
-    #     ngen = kwargs.get("gen")
-    #     population = kwargs.get("population")
-    #     fitness = [ind.fitness.reduce for ind in population]
-    #     fitness.sort()
-
-    #     self.best.append(fitness[0])
-    #     self.median.append(fitness[int(round(len(fitness) / 2.0))])
-    #     self.stagnation_iter = int(
-    #         numpy.ceil(120 + 30.0 * self.problem_size
-    #                    / self.lambda_)
-    #     )
-    #     i20 = int(ngen * 0.2) # sample of last 20%
-    #     i30 = int(i20 * 0.3) # 30% of the sample
-
-    #     cbest = len(self.best) > self.stagnation_iter
-    #     cmed = len(self.median) > self.stagnation_iter
-    #     # compare median of last 30 % of the sample vs median of first 30% of the sample
-    #     cbest2 = numpy.median(self.best[-i30:]) >= numpy.median(
-    #         self.best[-i20:-i20 + i30]
-    #     )
-    #     cmed2 = numpy.median(self.median[-i30:]) >= numpy.median(
-    #         self.median[-i20:-i20 + i30]
-    #     )
-
-    #     if cbest and cmed and cbest2 and cmed2:
-    #         self.criteria_met = True
-
-    def check(self, kwargs):
-        """Check if the population stopped improving"""
-        ngen = kwargs.get("gen")
-        self.stagnation_iter = int(
-            numpy.ceil(120 + 30.0 * self.problem_size
-                       / self.lambda_)
-        )
-        i20 = int(ngen * 0.2) # sample of last 20%
-        i30 = int(i20 * 0.3) # 30% of the sample
-
-        cbest = len(self.best[:ngen]) > self.stagnation_iter
-        cmed = len(self.median[:ngen]) > self.stagnation_iter
-        # compare median of last 30 % of the sample vs median of first 30% of the sample
-        cbest2 = numpy.median(self.best[ngen-i30:ngen]) >= numpy.median(
-            self.best[ngen-i20:ngen-i20 + i30]
-        )
-        cmed2 = numpy.median(self.median[ngen-i30:ngen]) >= numpy.median(
-            self.median[ngen-i20:ngen-i20 + i30]
-        )
-
-        self.gens.append(ngen)
-        self.best_now.append(numpy.median(self.best[ngen-i30:ngen]))
-        self.best_bf.append(numpy.median(self.best[ngen-i20:ngen-i20 + i30]))
-        self.med_now.append(numpy.median(self.median[ngen-i30:ngen]))
-        self.med_bf.append(numpy.median(self.median[ngen-i20:ngen-i20 + i30]))
-        # logger.info(len(self.best))
-        # logger.info(self.stagnation_iter)
-        # logger.info(numpy.median(self.best[-i30:]))
-        # logger.info(numpy.median(self.best[-i20:-i20 + i30]))
-        if cbest2 or cmed2:
-            logger.info(ngen)
-            logger.info(cbest2)
-            logger.info(cmed2)
-        if cbest and cmed and cbest2 and cmed2:
-            logger.info(f"stop at {ngen}")
-            self.criteria_met = True
-
-
-class Stagnationv3(bluepyopt.stoppingCriteria.StoppingCriteria):
-    """Stagnation stopping criteria class"""
-
-    name = "Stagnationv3"
-
-    def __init__(self, lambda_, problem_size, threshold=0.0001):
-        """Constructor"""
-        super(Stagnationv3, self).__init__()
-
-        self.lambda_ = lambda_
-        self.problem_size = problem_size
-        self.stagnation_iter = int(
-            numpy.ceil(120 + 30.0 * self.problem_size
-                       / self.lambda_)
-        )
-        self.threshold = threshold
-
-        self.best = []
-        self.median = []
-
-    def check(self, kwargs):
-        """Check if the fitness does not improve reasonably fast"""
-        ngen = kwargs.get("gen")
-        population = kwargs.get("population")
-        # fitness = [ind.fitness.reduce for ind in population]
-        # fitness.sort()
-
-        # self.best.append(fitness[0])
-        # self.median.append(fitness[int(round(len(fitness) / 2.0))])
-
-        i20 = int(ngen * 0.2) # sample of last 20%
-        i30 = int(i20 * 0.3) # 30% of the sample
-
-        cbest = len(self.best[:ngen]) > self.stagnation_iter
-        cmed = len(self.median[:ngen]) > self.stagnation_iter
-        # compare median of last 30 % of the sample vs median of first 30% of the sample
-        cbest2 = numpy.median(self.best[ngen-i30:ngen]) * (1 + self.threshold * i20) > numpy.median(
-            self.best[ngen-i20:ngen-i20 + i30]
-        )
-        cmed2 = numpy.median(self.median[ngen-i30:ngen]) * (1 + self.threshold * i20) > numpy.median(
-            self.median[ngen-i20:ngen-i20 + i30]
-        )
-
-        if cbest and cmed and cbest2 and cmed2:
-            self.criteria_met = True
-
-class Stagnationv4(bluepyopt.stoppingCriteria.StoppingCriteria):
-    """Stagnation stopping criteria class"""
-
-    name = "Stagnationv4"
-
-    def __init__(self, lambda_, problem_size, threshold=0.0001):
-        """Constructor"""
-        super(Stagnationv4, self).__init__()
-
-        self.lambda_ = lambda_
-        self.problem_size = problem_size
-        self.stagnation_iter = int(
-            numpy.ceil(120 + 30.0 * self.problem_size
-                       / self.lambda_)
-        )
-        self.threshold = threshold
-
-        self.best = []
-
-    def check(self, kwargs):
-        """Check if the fitness of best model does not improve reasonably fast"""
-        ngen = kwargs.get("gen")
-        population = kwargs.get("population")
-        # fitness = [ind.fitness.reduce for ind in population]
-        # fitness.sort()
-
-        # self.best.append(fitness[0])
-
-        i20 = int(ngen * 0.2) # sample of last 20%
-        i30 = int(i20 * 0.3) # 30% of the sample
-
-        cbest = len(self.best[:ngen]) > self.stagnation_iter
-        # compare median of last 30 % of the sample vs median of first 30% of the sample
-        cbest2 = numpy.median(self.best[ngen-i30:ngen]) * (1 + self.threshold * i20) > numpy.median(
-            self.best[ngen-i20:ngen-i20 + i30]
-        )
-
-        if cbest and cbest2:
-            self.criteria_met = True
-
-class Stagnationv5(bluepyopt.stoppingCriteria.StoppingCriteria):
-    """Stagnation stopping criteria class"""
-
-    name = "Stagnationv5"
-
-    def __init__(self, lambda_, problem_size, threshold=0.01):
-        """Constructor"""
-        super(Stagnationv5, self).__init__()
-
-        self.lambda_ = lambda_
-        self.problem_size = problem_size
-        self.stagnation_iter = int(
-            numpy.ceil(120 + 30.0 * self.problem_size
-                       / self.lambda_)
-        )
-        self.threshold = threshold
-
-        self.best = []
-        self.median = []
-
-    def check(self, kwargs):
-        """Check if the fitness does not improve over 1% over 100 gens"""
-        ngen = kwargs.get("gen")
-        population = kwargs.get("population")
-        # fitness = [ind.fitness.reduce for ind in population]
-        # fitness.sort()
-
-        # self.best.append(fitness[0])
-        # self.median.append(fitness[int(round(len(fitness) / 2.0))])
-
-        cbest = len(self.best[:ngen]) > self.stagnation_iter
-        cmed = len(self.median[:ngen]) > self.stagnation_iter
-        # compare median of last 30 % of the sample vs median of first 30% of the sample
-        cbest2 = numpy.median(self.best[ngen-20:ngen]) * (1 + self.threshold) > numpy.median(
-            self.best[ngen-120:ngen-100]
-        )
-        cmed2 = numpy.median(self.median[ngen-20:ngen]) * (1 + self.threshold) > numpy.median(
-            self.median[ngen-120:ngen-100]
-        )
-
-        if cbest and cmed and cbest2 and cmed2:
-            self.criteria_met = True
-
-class Stagnationv6(bluepyopt.stoppingCriteria.StoppingCriteria):
-    """Stagnation stopping criteria class"""
-
-    name = "Stagnationv6"
-
-    def __init__(self, lambda_, problem_size, threshold=0.01):
-        """Constructor"""
-        super(Stagnationv6, self).__init__()
-
-        self.lambda_ = lambda_
-        self.problem_size = problem_size
-        self.stagnation_iter = int(
-            numpy.ceil(120 + 30.0 * self.problem_size
-                       / self.lambda_)
-        )
-        self.threshold = threshold
-
-        self.best = []
-
-    def check(self, kwargs):
-        """Check if the best model fitness does not improve over 1% over 100 gens"""
-        ngen = kwargs.get("gen")
-        population = kwargs.get("population")
-        # fitness = [ind.fitness.reduce for ind in population]
-        # fitness.sort()
-
-        # self.best.append(fitness[0])
-        # self.median.append(fitness[int(round(len(fitness) / 2.0))])
-
-        cbest = len(self.best[:ngen]) > self.stagnation_iter
-        # compare median of last 30 % of the sample vs median of first 30% of the sample
-        cbest2 = numpy.median(self.best[ngen-20:ngen]) * (1 + self.threshold) > numpy.median(
-            self.best[ngen-120:ngen-100]
-        )
-
-        if cbest and cbest2:
-            self.criteria_met = True
-
-
-class Stagnationv7(bluepyopt.stoppingCriteria.StoppingCriteria):
-    """Stagnation stopping criteria class"""
-
-    name = "Stagnationv7"
-
-    def __init__(self, lambda_, problem_size, threshold=0.01, std_threshold=0.02):
-        """Constructor"""
-        super(Stagnationv7, self).__init__()
-
-        self.lambda_ = lambda_
-        self.problem_size = problem_size
         self.stagnation_iter = int(
             numpy.ceil(120 + 30.0 * self.problem_size
                        / self.lambda_)
@@ -375,156 +126,27 @@ class Stagnationv7(bluepyopt.stoppingCriteria.StoppingCriteria):
         self.std_threshold = std_threshold
 
         self.best = []
-        self.median = []
 
     def check(self, kwargs):
-        """Check if the best model fitness does not improve over 1% over 100 gens
-            with small variations in best model fitness
+        """Check if best model fitness does not improve over 1% over 100 gens
+            and is not noisy in the last 20 generations
         """
         ngen = kwargs.get("gen")
         population = kwargs.get("population")
-        # fitness = [ind.fitness.reduce for ind in population]
-        # fitness.sort()
+        fitness = [ind.fitness.reduce for ind in population]
+        fitness.sort()
 
-        # self.best.append(fitness[0])
-        # self.median.append(fitness[int(round(len(fitness) / 2.0))])
+        # condition to avoid duplicates when re-starting
+        if len(self.best) < ngen:
+            self.best.append(fitness[0])
 
-        cbest = len(self.best[:ngen]) > self.stagnation_iter
-        # compare median of last 30 % of the sample vs median of first 30% of the sample
-        cbest2 = numpy.median(self.best[ngen-20:ngen]) * (1 + self.threshold) > numpy.median(
-            self.best[ngen-120:ngen-100]
+        crit1 = len(self.best) > self.stagnation_iter
+        crit2 = numpy.median(self.best[-20:]) * (1 + self.threshold) > numpy.median(
+            self.best[-120:-100]
         )
-        cbest3 = numpy.std(self.best[ngen-20:ngen + 1]) < self.std_threshold * self.best[ngen]
+        crit3 = numpy.std(self.best[-20:]) < self.std_threshold * self.best[-1]
 
-
-        if cbest and cbest2 and cbest3:
-            self.criteria_met = True
-
-
-class Stagnationv8(bluepyopt.stoppingCriteria.StoppingCriteria):
-    """Stagnation stopping criteria class"""
-
-    name = "Stagnationv8"
-
-    def __init__(self, lambda_, problem_size, threshold=0.0001, std_threshold=0.02):
-        """Constructor"""
-        super(Stagnationv8, self).__init__()
-
-        self.lambda_ = lambda_
-        self.problem_size = problem_size
-        self.stagnation_iter = int(
-            numpy.ceil(120 + 30.0 * self.problem_size
-                       / self.lambda_)
-        )
-        self.threshold = threshold
-        self.std_threshold = std_threshold
-
-        self.best = []
-
-    def check(self, kwargs):
-        """Check if the fitness of best model does not improve reasonably fast"""
-        ngen = kwargs.get("gen")
-        population = kwargs.get("population")
-        # fitness = [ind.fitness.reduce for ind in population]
-        # fitness.sort()
-
-        # self.best.append(fitness[0])
-
-        i20 = int(ngen * 0.2) # sample of last 20%
-        i30 = int(i20 * 0.3) # 30% of the sample
-
-        cbest = len(self.best[:ngen]) > self.stagnation_iter
-        # compare median of last 30 % of the sample vs median of first 30% of the sample
-        cbest2 = numpy.median(self.best[ngen-i30:ngen]) * (1 + self.threshold * i20) > numpy.median(
-            self.best[ngen-i20:ngen-i20 + i30]
-        )
-        cbest3 = numpy.std(self.best[ngen-i30:ngen + 1]) < self.std_threshold * self.best[ngen]
-
-        if cbest and cbest2 and cbest3:
-            self.criteria_met = True
-
-
-class Stagnationv9(bluepyopt.stoppingCriteria.StoppingCriteria):
-    """Stagnation stopping criteria class"""
-
-    name = "Stagnationv9"
-
-    def __init__(self, lambda_, problem_size, std_threshold=0.02):
-        """Constructor"""
-        super(Stagnationv9, self).__init__()
-
-        self.lambda_ = lambda_
-        self.problem_size = problem_size
-        self.stagnation_iter = int(
-            numpy.ceil(120 + 30.0 * self.problem_size
-                       / self.lambda_)
-        )
-        self.std_threshold = std_threshold
-
-        self.best = []
-
-    def check(self, kwargs):
-        """Check if the std of best model is below %age of best fitness value"""
-        ngen = kwargs.get("gen")
-        # population = kwargs.get("population")
-        # fitness = [ind.fitness.reduce for ind in population]
-        # fitness.sort()
-
-        # self.best.append(fitness[0])
-
-        i20 = int(ngen * 0.2) # sample of last 20%
-        i30 = int(i20 * 0.3) # 30% of the sample
-
-        cbest = len(self.best[:ngen]) > self.stagnation_iter
-
-        cbest3 = numpy.std(self.best[ngen-i30:ngen + 1]) < self.std_threshold * self.best[ngen]
-
-        if cbest  and cbest3:
-            self.criteria_met = True
-
-
-class Stagnationv10(bluepyopt.stoppingCriteria.StoppingCriteria):
-    """Stagnation stopping criteria class"""
-
-    name = "Stagnationv10"
-
-    def __init__(self, lambda_, problem_size, threshold=0.0001, std_threshold=0.02):
-        """Constructor"""
-        super(Stagnationv10, self).__init__()
-
-        self.lambda_ = lambda_
-        self.problem_size = problem_size
-        self.stagnation_iter = int(
-            numpy.ceil(120 + 30.0 * self.problem_size
-                       / self.lambda_)
-        )
-        self.threshold = threshold
-        self.std_threshold = std_threshold
-
-        self.best = []
-
-    def check(self, kwargs):
-        """Check if the fitness of best model does not improve reasonably fast"""
-        ngen = kwargs.get("gen")
-        population = kwargs.get("population")
-        # fitness = [ind.fitness.reduce for ind in population]
-        # fitness.sort()
-
-        # self.best.append(fitness[0])
-
-        # i20 = max(int(ngen * 0.2), 60) # sample of last 20%
-        i20 = int(ngen * 0.2) # sample of last 20%
-        i30 = int(i20 * 0.3) # 30% of the sample
-
-        cbest = len(self.best[:ngen]) > self.stagnation_iter
-        # compare median of last 30 % of the sample vs median of first 30% of the sample
-        cbest2 = numpy.median(self.best[ngen-i30:ngen]) * (1 + self.threshold * i20) > numpy.median(
-            self.best[ngen-i20:ngen-i20 + i30]
-        )
-        # cbest3 = numpy.std(self.best[ngen-i30:ngen + 1]) < self.std_threshold * self.best[ngen]
-        cbest3 = numpy.std(self.best[ngen-i30:ngen + 1]) < numpy.std(self.best[ngen-i20:ngen-i20 + i30])  * (1 + self.threshold * i20)
-
-        if cbest and cbest2 and cbest3:
+        if crit1 and crit2 and crit3:
             self.criteria_met = True
 
 

@@ -98,15 +98,15 @@ class CMA_SO(cma.Strategy):
         self.active = True
         if max_ngen <= 0:
             max_ngen = 100 + 50 * (self.problem_size + 3) ** 2 / numpy.sqrt(
-                self.lambda_
+                lambda_
             )
 
         self.stopping_conditions = [
             MaxNGen(max_ngen),
-            Stagnation(self.lambda_, self.problem_size),
-            # Stagnationv2(self.lambda_, self.problem_size),
-            TolHistFun(self.lambda_, self.problem_size),
-            EqualFunVals(self.lambda_, self.problem_size),
+            Stagnation(lambda_, self.problem_size),
+            # Stagnationv2(lambda_, self.problem_size),
+            TolHistFun(lambda_, self.problem_size),
+            EqualFunVals(lambda_, self.problem_size),
             NoEffectAxis(self.problem_size),
             TolUpSigma(float(self.sigma)),
             TolX(),
