@@ -290,67 +290,6 @@ class DEAPOptimisationCMA(bluepyopt.optimisations.Optimisation):
         if hasattr(self.evaluator, "param_names"):
             param_names = self.evaluator.param_names
 
-        # allow run to continue
-        for i in range(len(CMA_es.stopping_conditions)):
-            CMA_es.stopping_conditions[i].criteria_met = False
-        CMA_es.active = True
-
-        # check stagnation v2 termination
-        # from .stoppingCriteria import (
-        #     Stagnationv2,
-        #     Stagnationv3,
-        #     Stagnationv4,
-        #     Stagnationv5,
-        #     Stagnationv6,
-        #     Stagnationv7,
-        #     Stagnationv8,
-        # )
-
-        # old_stag = CMA_es.stopping_conditions[1]
-        # CMA_es.stopping_conditions[1] = Stagnationv2(CMA_es.lambda_, CMA_es.problem_size)
-        # CMA_es.stopping_conditions[1].best = old_stag.best
-        # CMA_es.stopping_conditions[1].median = old_stag.median
-
-        # for new_stag in [Stagnationv3, Stagnationv4, Stagnationv5, Stagnationv6, Stagnationv7, Stagnationv8]:
-        #     CMA_es.stopping_conditions.append(new_stag(CMA_es.lambda_, CMA_es.problem_size))
-        #     CMA_es.stopping_conditions[-1].best = old_stag.best
-        #     CMA_es.stopping_conditions[-1].median = old_stag.median
-        # CMA_es.stopping_conditions = CMA_es.stopping_conditions[1:]
-        # # for i in range(600):
-        # #     if (gen - i) >= 0:
-        # #         CMA_es.check_termination(gen-i)
-
-        # s2, s3, s4, s5, s6, s7, s8 = [10000] * 7
-        # for i in range(gen):
-        #     s2, s3, s4, s5, s6, s7, s8 = CMA_es.check_termination(i, s2, s3, s4, s5, s6, s7, s8)
-
-        # print(s2, s3, s4, s5, s6, s7, s8)
-
-        # # do figure
-        # # stag = CMA_es.stopping_conditions[0]
-        # # import matplotlib.pyplot as plt
-
-        # # fig = plt.figure()
-        # # plt.plot(stag.gens, stag.best_bf, color="blue", label="best before")
-        # # plt.plot(stag.gens, stag.best_now, color="cyan", label="best now")
-        # # plt.plot(stag.gens, stag.med_bf, color="red", label="median before")
-        # # plt.plot(stag.gens, stag.med_now, color="orange", label="median now")
-        # # plt.xlabel("Generations")
-        # # plt.ylabel("Fitness")
-        # # plt.legend()
-        # # plt.savefig("figures/stagnation_v2.png", dpi=400)
-
-        # CMA_es.active = False
-
-        # actualize max_ngen and continue run
-        # CMA_es.active = True
-        # from .stoppingCriteria import MaxNGen
-        # max_ngen = 2000
-        # CMA_es.stopping_conditions[0] = MaxNGen(max_ngen)
-
-        # if CMA_es.stopping_conditions[1].name != "TolHistFun":
-        #     if gen > 1 and len(CMA_es.stopping_conditions[1].median) < 1:
-        #         raise Exception("Previous medians have not been recorded in Stagnation")
         # Run until a termination criteria is met
         while utils.run_next_gen(CMA_es.active, terminator):
             logger.info("Generation {}".format(gen))
