@@ -116,7 +116,6 @@ class NrnSimulator(object):
 
     def run(
             self,
-            cell_model,
             tstop=None,
             dt=None,
             cvode_active=None,
@@ -166,13 +165,7 @@ class NrnSimulator(object):
             rng.Random123_globalindex(random123_globalindex)
 
         try:
-            # self.cvode.atol(1e-4)
-            # tanguy hack to avoid timestep error
-            self.neuron.h.finitialize()
-            while self.neuron.h.t < self.neuron.h.tstop:
-                self.neuron.h.fadvance()
-                if cell_model and abs(cell_model.icell.soma[0](0.5).v) > 200.:
-                    raise NrnSimulatorException('Membrane potential is out of bounds')
+            self.neuron.h.run()
         except Exception as e:
             raise NrnSimulatorException('Neuron simulator error', e)
 
