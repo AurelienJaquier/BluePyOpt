@@ -152,7 +152,8 @@ class DEAPOptimisationCMA(bluepyopt.optimisations.Optimisation):
                 functools.partial(
                     lambda param, bm, br: (param * br) + bm,
                     bm=m,
-                    br=r)
+                    br=r
+                )
             )
 
         # Overwrite the bounds with -1. and 1.

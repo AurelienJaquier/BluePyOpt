@@ -102,7 +102,9 @@ class Stagnationv2(bluepyopt.stoppingCriteria.StoppingCriteria):
 
     name = "Stagnationv2"
 
-    def __init__(self, lambda_, problem_size, threshold=0.01, std_threshold=0.02):
+    def __init__(
+        self, lambda_, problem_size, threshold=0.01, std_threshold=0.02
+    ):
         """Constructor
         
         Args:
@@ -143,10 +145,11 @@ class Stagnationv2(bluepyopt.stoppingCriteria.StoppingCriteria):
             self.best.append(fitness[0])
 
         crit1 = len(self.best) > self.stagnation_iter
-        crit2 = numpy.median(self.best[-20:]) * (1 + self.threshold) > numpy.median(
-            self.best[-120:-100]
+        crit2 = numpy.median(self.best[-20:]) * (1 + self.threshold) \
+            > numpy.median(self.best[-120:-100])
+        crit3 = numpy.std(self.best[-20:]) < (
+            self.std_threshold * self.best[-1]
         )
-        crit3 = numpy.std(self.best[-20:]) < self.std_threshold * self.best[-1]
 
         if crit1 and crit2 and crit3:
             self.criteria_met = True
