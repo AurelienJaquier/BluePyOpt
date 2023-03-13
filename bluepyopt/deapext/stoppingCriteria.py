@@ -1,7 +1,7 @@
 """StoppingCriteria class"""
 
 """
-Copyright (c) 2016-2021, EPFL/Blue Brain Project
+Copyright (c) 2016-2022, EPFL/Blue Brain Project
 
  This file is part of BluePyOpt <https://github.com/BlueBrain/BluePyOpt>
 
@@ -80,8 +80,9 @@ class Stagnation(bluepyopt.stoppingCriteria.StoppingCriteria):
             self.best.append(fitness[0])
             self.median.append(fitness[int(round(len(fitness) / 2.0))])
         self.stagnation_iter = int(
-            numpy.ceil(0.2 * ngen + 120 + 30.0 * self.problem_size
-                       / self.lambda_)
+            numpy.ceil(
+                0.2 * ngen + 120 + 30.0 * self.problem_size / self.lambda_
+            )
         )
 
         cbest = len(self.best) > self.stagnation_iter
@@ -119,8 +120,9 @@ class Stagnationv2(bluepyopt.stoppingCriteria.StoppingCriteria):
         self.lambda_ = lambda_
         self.problem_size = problem_size
         self.stagnation_iter = int(
-            numpy.ceil(120 + 30.0 * self.problem_size
-                       / self.lambda_)
+            numpy.ceil(
+                0.2 * ngen + 120 + 30.0 * self.problem_size / self.lambda_
+            )
         )
         self.threshold = threshold
         self.std_threshold = std_threshold
@@ -159,17 +161,14 @@ class TolHistFun(bluepyopt.stoppingCriteria.StoppingCriteria):
         """Constructor"""
         super(TolHistFun, self).__init__()
         self.tolhistfun = 10 ** -12
-        self.mins = deque(maxlen=10 + int(numpy.ceil(30.0 * problem_size
-                                                     / lambda_)))
+        self.mins = deque(
+            maxlen=10 + int(numpy.ceil(30.0 * problem_size / lambda_)))
 
     def check(self, kwargs):
         """Check if the range of the best values is smaller than
         the threshold"""
         population = kwargs.get("population")
         self.mins.append(numpy.min([ind.fitness.reduce for ind in population]))
-        # if max(self.mins) - min(self.mins) > self.tolhistfun:
-        #     logger.info("TolHistFun diff:")
-        #     logger.info(max(self.mins) - min(self.mins))
 
         if (
             len(self.mins) == self.mins.maxlen
@@ -190,9 +189,6 @@ class EqualFunVals(bluepyopt.stoppingCriteria.StoppingCriteria):
         self.equalvals = float(problem_size) / 3.0
         self.equalvals_k = int(numpy.ceil(0.1 + lambda_ / 4.0))
         self.equalvalues = []
-        self.equalvalues_2 = []
-        self.equalvalues_3 = []
-        self.equalvalues_4 = []
 
     def check(self, kwargs):
         """Check if in 1/3rd of the last problem_size iterations the best and
@@ -207,38 +203,6 @@ class EqualFunVals(bluepyopt.stoppingCriteria.StoppingCriteria):
             self.equalvalues.append(1)
         else:
             self.equalvalues.append(0)
-
-        # new code for testing
-        if not hasattr(self, "equalvalues_2"):
-            self.equalvalues_2 = []
-        if not hasattr(self, "equalvalues_3"):
-            self.equalvalues_3 = []
-        if not hasattr(self, "equalvalues_4"):
-            self.equalvalues_4 = []
-
-        if isclose(fitness[0], fitness[-self.equalvals_k], rel_tol=1e-5):
-            self.equalvalues_2.append(1)
-        else:
-            self.equalvalues_2.append(0)
-
-        if isclose(fitness[0], fitness[-self.equalvals_k], rel_tol=1e-4):
-            self.equalvalues_3.append(1)
-        else:
-            self.equalvalues_3.append(0)
-
-        if isclose(fitness[0], fitness[-self.equalvals_k], rel_tol=1e-3):
-            self.equalvalues_4.append(1)
-        else:
-            self.equalvalues_4.append(0)
-
-        sample_gen = 2075
-        if ngen == sample_gen:
-            logger.info(f"Values taken at gen {sample_gen}")
-            logger.info("EqualFunVals (1e-6, 1e-5, 1e-4, 1e-3):")
-            logger.info(sum(self.equalvalues[-self.problem_size:]))
-            logger.info(sum(self.equalvalues_2[-self.problem_size:]))
-            logger.info(sum(self.equalvalues_3[-self.problem_size:]))
-            logger.info(sum(self.equalvalues_4[-self.problem_size:]))
 
         if (
             ngen > self.problem_size
@@ -352,4 +316,3 @@ class NoEffectCoor(bluepyopt.stoppingCriteria.StoppingCriteria):
 
         if any(centroid == centroid + 0.2 * sigma * numpy.diag(C)):
             self.criteria_met = True
-            

@@ -1,7 +1,7 @@
 """CMA Optimisation class"""
 
 """
-Copyright (c) 2016-2020, EPFL/Blue Brain Project
+Copyright (c) 2016-2022, EPFL/Blue Brain Project
 
  This file is part of BluePyOpt <https://github.com/BlueBrain/BluePyOpt>
 
@@ -39,6 +39,8 @@ logger = logging.getLogger("__main__")
 
 
 def _ind_convert_space(ind, convert_fcn):
+    """util function to pass the individual from normalized to real space and
+    inversely"""
     return [f(x) for f, x in zip(convert_fcn, ind)]
 
 
@@ -64,6 +66,7 @@ class DEAPOptimisationCMA(bluepyopt.optimisations.Optimisation):
 
         Args:
             evaluator (Evaluator): Evaluator object
+            use_scoop (bool): use scoop map for parallel computation
             seed (float): Random number generator seed
             offspring_size (int): Number of offspring individuals in each
                 generation
@@ -140,10 +143,16 @@ class DEAPOptimisationCMA(bluepyopt.optimisations.Optimisation):
         self.to_space = []
         for r, m in zip(bounds_radius, bounds_mean):
             self.to_norm.append(
-                functools.partial(lambda param, bm, br: (param - bm) / br, bm=m, br=r)
+                functools.partial(
+                    lambda param, bm, br: (param - bm) / br,
+                    bm=m,
+                    br=r)
             )
             self.to_space.append(
-                functools.partial(lambda param, bm, br: (param * br) + bm, bm=m, br=r)
+                functools.partial(
+                    lambda param, bm, br: (param * br) + bm,
+                    bm=m,
+                    br=r)
             )
 
         # Overwrite the bounds with -1. and 1.
@@ -155,7 +164,8 @@ class DEAPOptimisationCMA(bluepyopt.optimisations.Optimisation):
         # In case initial guesses were provided, rescale them to the norm space
         if self.centroids is not None:
             self.centroids = [
-                self.toolbox.Individual(_ind_convert_space(ind, self.to_norm)) for ind in centroids
+                self.toolbox.Individual(_ind_convert_space(ind, self.to_norm))
+                for ind in centroids
             ]
 
     def setup_deap(self):
@@ -167,7 +177,11 @@ class DEAPOptimisationCMA(bluepyopt.optimisations.Optimisation):
 
         # Register the 'uniform' function
         self.toolbox.register(
-            "uniformparams", utils.uniform, self.lbounds, self.ubounds, self.ind_size
+            "uniformparams",
+            utils.uniform,
+            self.lbounds,
+            self.ubounds,
+            self.ind_size
         )
 
         # Register the individual format
@@ -180,21 +194,19 @@ class DEAPOptimisationCMA(bluepyopt.optimisations.Optimisation):
             ),
         )
 
-        # A Random Indiviual is create by ListIndividual and parameters are
+        # A Random Individual is created by ListIndividual and parameters are
         # initially picked by 'uniform'
         self.toolbox.register(
             "RandomInd",
             deap.tools.initIterate,
-            functools.partial(
-                utils.WSListIndividual,
-                obj_size=self.ind_size,
-                reduce_fcn=self.fitness_reduce,
-            ),
+            self.toolbox.Individual,
             self.toolbox.uniformparams,
         )
 
         # Register the population format. It is a list of individuals
-        self.toolbox.register("population", deap.tools.initRepeat, list, self.toolbox.RandomInd)
+        self.toolbox.register(
+            "population", deap.tools.initRepeat, list, self.toolbox.RandomInd
+        )
 
         # Register the evaluation function for the individuals
         self.toolbox.register(
@@ -229,7 +241,7 @@ class DEAPOptimisationCMA(bluepyopt.optimisations.Optimisation):
         cp_filename=None,
         terminator=None,
     ):
-        """Run the optimizer until a stopping criteria is met.
+        """ Run the optimizer until a stopping criteria is met.
 
         Args:
             max_ngen(int): Total number of generation to run
@@ -295,10 +307,13 @@ class DEAPOptimisationCMA(bluepyopt.optimisations.Optimisation):
             logger.info("Generation {}".format(gen))
 
             # Generate the new populations
-            n_out = CMA_es.generate_new_pop(lbounds=self.lbounds, ubounds=self.ubounds)
+            n_out = CMA_es.generate_new_pop(
+                lbounds=self.lbounds, ubounds=self.ubounds
+            )
             logger.debug(
                 "Number of individuals outside of bounds: {} ({:.2f}%)".format(
-                    n_out, 100.0 * n_out / len(CMA_es.population)
+                    n_out,
+                    100.0 * n_out / len(CMA_es.population)
                 )
             )
 
@@ -357,5 +372,4 @@ class DEAPOptimisationCMA(bluepyopt.optimisations.Optimisation):
         stats.register("std", numpy.std)
         stats.register("min", numpy.min)
         stats.register("max", numpy.max)
-        stats.register("med", numpy.median)
         return stats

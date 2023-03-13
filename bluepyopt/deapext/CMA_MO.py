@@ -30,7 +30,7 @@ import deap
 from deap import base
 from deap import cma
 
-from .stoppingCriteria import MaxNGen, Stagnation
+from .stoppingCriteria import MaxNGen, Stagnationv2
 from . import utils
 from . import hype
 
@@ -165,7 +165,7 @@ class CMA_MO(cma.StrategyMultiObjective):
 
         self.stopping_conditions = [
             MaxNGen(max_ngen),
-            Stagnation(lambda_, self.problem_size),
+            Stagnationv2(lambda_, self.problem_size),
         ]
 
     def _select(self, candidates):

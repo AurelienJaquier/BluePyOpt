@@ -1,7 +1,7 @@
 """Single Objective CMA-es class"""
 
 """
-Copyright (c) 2016-2020, EPFL/Blue Brain Project
+Copyright (c) 2016-2022, EPFL/Blue Brain Project
 
  This file is part of BluePyOpt <https://github.com/BlueBrain/BluePyOpt>
 
@@ -31,7 +31,6 @@ from deap import cma
 
 from .stoppingCriteria import (
     MaxNGen,
-    Stagnation,
     Stagnationv2,
     TolHistFun,
     EqualFunVals,
@@ -66,9 +65,15 @@ class CMA_SO(cma.Strategy):
         Args:
             centroid (list): initial guess used as the starting point of
             the CMA-ES
+            offspring_size (int): number of offspring individuals in each
+                generation
             sigma (float): initial standard deviation of the distribution
             max_ngen (int): total number of generation to run
             IndCreator (fcn): function returning an individual of the pop
+            RandIndCreator (fcn): function creating a random individual.
+            map_function (map): function used to map (parallelize) the
+                evaluation function calls
+            use_scoop (bool): use scoop map for parallel computation
         """
 
         if offspring_size is None:
@@ -103,8 +108,7 @@ class CMA_SO(cma.Strategy):
 
         self.stopping_conditions = [
             MaxNGen(max_ngen),
-            Stagnation(lambda_, self.problem_size),
-            # Stagnationv2(lambda_, self.problem_size),
+            Stagnationv2(lambda_, self.problem_size),
             TolHistFun(lambda_, self.problem_size),
             EqualFunVals(lambda_, self.problem_size),
             NoEffectAxis(self.problem_size),
